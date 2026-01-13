@@ -1,8 +1,6 @@
 name: Generate APK
 
-on: 
-  push:
-    branches: [ "main", "master" ]
+on: [push, pull_request]
 
 jobs:
   build:
@@ -16,16 +14,22 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: gradle
 
-      # FIX FOR CODE 127: This ensures the wrapper exists and is executable
-      - name: Make Gradlew Executable
+      - name: Grant permissions
         run: chmod +x gradlew
 
-      - name: Build APK
-        run: ./gradlew assembleDebug
+      - name: Build with Gradle
+        # "stacktrace" will tell us EXACTLY what is wrong if it fails
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Find APK File
+        # This helps if your APK isn't in the standard /app/build/ folder
+        run: find . -name "*.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: "**/*.apk" # This looks everywhere for the APK
+          
